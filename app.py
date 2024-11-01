@@ -79,7 +79,7 @@ def payment_pix_page(payment_id):
     payment = Payment.query.get(payment_id)
     if not payment:
         return render_template('not_found.html')
-    
+
     if payment.paid:
         return render_template('payment_confirmed.html',
                                payment_id=payment.id,
@@ -98,6 +98,11 @@ def payment_pix_page(payment_id):
 @socketio.on('connect')
 def connect():
     print('client is connected')
+
+
+@socketio.on('disconnect')
+def disconnect():
+    print("Client has disconnected from server")
 
 
 if __name__ == '__main__':
