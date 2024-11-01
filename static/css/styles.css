@@ -222,6 +222,7 @@ body main footer {
   width: 45% !important;
   height: 46px !important;
   background: #4551E6;
+  border: none;
   border-radius: 10px;
   font-weight: 600;
   font-size: 14px;

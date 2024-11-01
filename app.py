@@ -77,7 +77,9 @@ def pix_confirmation():
 @app.route('/payments/pix/<int:payment_id>', methods=['GET'])
 def payment_pix_page(payment_id):
     payment = Payment.query.get(payment_id)
-
+    if not payment:
+        return render_template('not_found.html')
+    
     if payment.paid:
         return render_template('payment_confirmed.html',
                                payment_id=payment.id,
