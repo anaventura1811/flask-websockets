@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, render_template
 from repository.database import db
 from models.payment import Payment
 from payments.pix import Pix
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from flask_socketio import SocketIO
 import os
 
 
@@ -13,7 +14,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
 
+HOST = os.getenv('HOST')
+
 db.init_app(app)
+socketio = SocketIO(app)
 
 
 @app.route('/payments/pix', methods=['POST'])
@@ -45,16 +49,61 @@ def get_image(file_name):
         mimetype='image/png')
 
 
-# Webhook --> ver mais sobre o conceito
+# Webhook
 @app.route('/payments/pix/confirmation', methods=['POST'])
 def pix_confirmation():
+    data = request.get_json()
+    if 'bank_payment_id' not in data:
+        return jsonify({"message": "Invalid payment data"}), 400
+
+    if 'value' not in data:
+        return jsonify({"message": "Invalid payment data"}), 400
+
+    payment = Payment.query.filter_by(
+        bank_payment_id=data.get('bank_payment_id')
+        ).first()
+    if not payment or payment.paid:
+        return jsonify({"message": "Payment not found"}), 404
+
+    if data.get('value') != payment.value:
+        return jsonify({"message": "Invalid payment data"}), 400
+
+    payment.paid = True
+    db.session.commit()
+    socketio.emit(f'payment-confirmed-{payment.id}')
     return jsonify({"message": "The payment has been confirmed"})
 
 
 @app.route('/payments/pix/<int:payment_id>', methods=['GET'])
 def payment_pix_page(payment_id):
-    return 'Pagamento pix'
+    payment = Payment.query.get(payment_id)
+    if not payment:
+        return render_template('not_found.html')
+
+    if payment.paid:
+        return render_template('payment_confirmed.html',
+                               payment_id=payment.id,
+                               value=payment.value,
+                               host=HOST,
+                               qr_code=payment.qr_code)
+
+    return render_template('payment_created.html',
+                           payment_id=payment.id,
+                           value=payment.value,
+                           host=HOST,
+                           qr_code=payment.qr_code)
+
+
+# websockets
+@socketio.on('connect')
+def connect():
+    print('client is connected')
+
+
+@socketio.on('disconnect')
+def disconnect():
+    print("Client has disconnected from server")
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
