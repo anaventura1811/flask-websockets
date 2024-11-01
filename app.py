@@ -1,9 +1,16 @@
 from flask import Flask, jsonify
 from repository.database import db
+from dotenv import load_dotenv
+import os
 
 
-# Controle interno de arquivos do flask
+load_dotenv()
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URL')
+
+db.init_app(app)
 
 
 @app.route('/payments/pix', methods=['POST'])
