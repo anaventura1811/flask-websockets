@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
@@ -36,7 +36,7 @@
 
         <div id="purchase-value">
           <img src="{{url_for('static', filename='template_img/tag.svg')}}" alt="Ícone de tag" />
-          <span>Compra de R$ <strong id="amount">287,90</strong></span>
+          <span>Compra de R$ <strong id="amount">{{value}}</strong></span>
         </div>
       </aside>
     </header>
@@ -52,7 +52,7 @@
         <small>O número do seu pedido é</small>
         <div>
           <img src="{{url_for('static', filename='template_img/basket.svg')}}" alt="Ícone do pedido" />
-          <span>527485022</span>
+          <span>{{payment_id}}</span>
         </div>
       </div>
     </footer>
